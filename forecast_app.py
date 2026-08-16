@@ -113,24 +113,30 @@ def load_fo_master(path: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def get_data(symbol: str, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = ""):
+def get_data(symbol: str, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = "", debug_mock: bool = False):
     df = fetch_icici_data(symbol, days=days, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right)
     if df is None or df.empty:
         if exchange_code == "NFO" and product_type in ("futures", "options"):
             st.warning(f"No historical data found for {symbol} {product_type} contract. Falling back to underlying {symbol} equity data.")
             df = fetch_icici_data(symbol, days=days, interval=interval, exchange_code="NSE", product_type="cash")
-            if df is None:
+        
+        if df is None or df.empty:
+            if debug_mock:
+                st.warning(f"ICICI fetch failed for {symbol}. Using mock data for debugging only.")
                 df = generate_mock_data(symbol, days=days, interval=interval)
-        else:
-            df = generate_mock_data(symbol, days=days, interval=interval)
+            else:
+                st.error(f"Failed to fetch data for {symbol} from ICICI. "
+                         f"Check symbol mapping, exchange code, or your session token. "
+                         f"If offline, enable Debug mode below.")
+                st.stop()
     return clean_time_series(df, interval=interval)
 
 
-def get_cached_data(symbol: str, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = ""):
-    cache_key = f"data_{symbol}_{days}_{interval}_{exchange_code}_{product_type}_{expiry_date}_{strike_price}_{right}"
+def get_cached_data(symbol: str, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = "", debug_mock: bool = False):
+    cache_key = f"data_{symbol}_{days}_{interval}_{exchange_code}_{product_type}_{expiry_date}_{strike_price}_{right}_{debug_mock}"
     if cache_key in st.session_state:
         return st.session_state[cache_key]
-    df = get_data(symbol, days=days, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right)
+    df = get_data(symbol, days=days, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, debug_mock=debug_mock)
     st.session_state[cache_key] = df
     return df
 
@@ -198,6 +204,8 @@ def main():
 
         st.divider()
         st.caption("⚠️ On Streamlit Cloud, session state may reset after ~5 min of inactivity. If you see 'Session key expired', re-enter your token.")
+
+        debug_mock = st.checkbox("🐛 Debug mode: use mock data if ICICI fails", value=False, help="Enable only for local testing. Disabled in production.")
 
     st.title("📈 NSE Stock Forecast — Chronos-T5")
 
@@ -324,7 +332,7 @@ def main():
 
     with st.spinner(f"Fetching {symbol} data ({interval}) and running {model_name} + {ensemble_method}..."):
         try:
-            series = get_cached_data(symbol, days=int(days), interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right)
+            series = get_cached_data(symbol, days=int(days), interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, debug_mock=debug_mock)
             indicators = calculate_indicators(series, interval=interval)
             gbdt_data = build_gbdt_features(series, indicators)
             gbdt_models = train_gbdt_models(gbdt_data, horizon=int(horizon))

@@ -118,10 +118,16 @@ def get_data_up_to(symbol: str, as_of_date: datetime, days: int = 365, interval:
         if exchange_code == "NFO" and product_type in ("futures", "options"):
             st.warning(f"No historical data found for {symbol} {product_type} contract. Falling back to underlying {symbol} equity data.")
             df = fetch_icici_data(symbol, days=days, interval=interval, exchange_code="NSE", product_type="cash")
-            if df is None:
+        
+        if df is None or df.empty:
+            if debug_mock:
+                st.warning(f"ICICI fetch failed for {symbol}. Using mock data for debugging only.")
                 df = generate_mock_data(symbol, days=days, interval=interval)
-        else:
-            df = generate_mock_data(symbol, days=days, interval=interval)
+            else:
+                st.error(f"Failed to fetch data for {symbol} from ICICI. "
+                         f"Check symbol mapping, exchange code, or your session token. "
+                         f"If offline, enable Debug mode below.")
+                st.stop()
     df = clean_time_series(df, interval=interval)
     if df.index.tz is not None:
         df.index = df.index.tz_localize(None)
@@ -132,11 +138,11 @@ def get_data_up_to(symbol: str, as_of_date: datetime, days: int = 365, interval:
     return df
 
 
-def get_cached_data_up_to(symbol: str, as_of_date: datetime, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = ""):
-    cache_key = f"data_{symbol}_{days}_{interval}_{exchange_code}_{product_type}_{expiry_date}_{strike_price}_{right}_{as_of_date.date()}"
+def get_cached_data_up_to(symbol: str, as_of_date: datetime, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = "", debug_mock: bool = False):
+    cache_key = f"data_{symbol}_{days}_{interval}_{exchange_code}_{product_type}_{expiry_date}_{strike_price}_{right}_{as_of_date.date()}_{debug_mock}"
     if cache_key in st.session_state:
         return st.session_state[cache_key]
-    df = get_data_up_to(symbol, as_of_date, days=days, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right)
+    df = get_data_up_to(symbol, as_of_date, days=days, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, debug_mock=debug_mock)
     st.session_state[cache_key] = df
     return df
 
@@ -204,6 +210,8 @@ def main():
 
         st.divider()
         st.caption("⚠️ On Streamlit Cloud, session state may reset after ~5 min of inactivity. If you see 'Session key expired', re-enter your token.")
+
+        debug_mock = st.checkbox("🐛 Debug mode: use mock data if ICICI fails", value=False, help="Enable only for local testing. Disabled in production.")
 
     st.title("🔍 Chronos Forecast Verification")
 
@@ -323,7 +331,7 @@ def main():
     as_of_datetime = datetime.combine(as_of_date, datetime.min.time())
     with st.spinner(f"Fetching {symbol} history up to {as_of_date} and generating forecast..."):
         try:
-            history_cut = get_cached_data_up_to(symbol, as_of_datetime, days=365, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right)
+            history_cut = get_cached_data_up_to(symbol, as_of_datetime, days=365, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, debug_mock=debug_mock)
             indicators = calculate_indicators(history_cut, interval=interval)
             gbdt_data = build_gbdt_features(history_cut, indicators)
             gbdt_models = train_gbdt_models(gbdt_data, horizon=int(horizon))
@@ -359,7 +367,7 @@ def main():
     else:
         forecast_dates = pd.date_range(start=last_history_date + timedelta(minutes=1), periods=len(forecast_df), freq="1min", tz="Asia/Kolkata")
 
-    actuals = get_cached_data_up_to(symbol, as_of_datetime + timedelta(days=int(horizon) * 2), days=365, interval=interval)
+    actuals = get_cached_data_up_to(symbol, as_of_datetime + timedelta(days=int(horizon) * 2), days=365, interval=interval, debug_mock=debug_mock)
     if actuals.index.tz is not None:
         actuals.index = actuals.index.tz_localize(None)
     actuals = actuals[actuals.index > pd.Timestamp(last_history_date)]
