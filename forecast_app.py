@@ -18,12 +18,16 @@ from forecast_pipeline import (
     plot_forecast,
     calculate_indicators,
     backtest_forecast,
+    calculate_directional_accuracy,
     generate_signals,
     build_gbdt_features,
     train_gbdt_models,
     forecast_gbdt,
     ensemble_forecast,
     get_nse_trading_days,
+    StationaryTransformer,
+    HybridTimeSeriesEnsemble,
+    ARIMAForecaster,
     TARGET_SYMBOL,
     FORECAST_HORIZON,
 )
@@ -53,6 +57,7 @@ ENSEMBLE_METHODS = {
     "Blend (Chronos + GBDT)": "blend",
     "Chronos Only": "chronos_only",
     "GBDT Only": "gbdt_only",
+    "Hybrid (Chronos + ARIMA + GBDT)": "hybrid",
 }
 
 
@@ -296,12 +301,24 @@ def main():
             gbdt_data = build_gbdt_features(series, indicators)
             gbdt_models = train_gbdt_models(gbdt_data, horizon=int(horizon))
             gbdt_forecast = forecast_gbdt(gbdt_models, gbdt_data, horizon=int(horizon))
-            chronos_forecast = run_chronos_forecast(series, horizon=int(horizon), model_name=model_id)
-            forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method=ensemble_key)
 
-            if gbdt_forecast.isna().all().all() and ensemble_key != "chronos_only":
+            transformer = StationaryTransformer(method="log_return")
+            stationary_series = transformer.fit_transform(series)
+            chronos_forecast = run_chronos_forecast(stationary_series, horizon=int(horizon), model_name=model_id)
+            chronos_forecast = transformer.inverse_transform(chronos_forecast)
+
+            arima_df = None
+            if ensemble_key == "hybrid":
+                arima_model = ARIMAForecaster(order=(1, 0, 1))
+                arima_model.fit(stationary_series)
+                arima_stationary = arima_model.predict(int(horizon))
+                arima_df = transformer.inverse_transform(arima_stationary)
+
+            forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method=ensemble_key, arima_df=arima_df)
+
+            if gbdt_forecast.isna().all().all() and ensemble_key not in ("chronos_only", "hybrid"):
                 st.warning("GBDT ensemble skipped due to insufficient data or features. Falling back to Chronos-only forecast.")
-                forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method="chronos_only")
+                forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method="chronos_only", arima_df=arima_df)
 
             signals = generate_signals(series, forecast_df, min_risk_reward=float(min_rr), max_kelly_pct=float(max_kelly)/100.0)
             backtest = backtest_forecast(series, horizon=int(horizon), model_name=model_id)

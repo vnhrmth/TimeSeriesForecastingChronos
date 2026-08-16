@@ -18,11 +18,128 @@ from sklearn.preprocessing import StandardScaler
 import lightgbm as lgb
 import xgboost as xgb
 import pandas_market_calendars as mcal
+import statsmodels.api as sm
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+
+class StationaryTransformer:
+    def __init__(self, method: str = "log_return"):
+        self.method = method
+        self.last_price = None
+        self.last_date = None
+
+    def fit_transform(self, series: pd.Series) -> pd.Series:
+        if self.method == "log_return":
+            transformed = np.log(series).diff().dropna()
+        elif self.method == "pct_change":
+            transformed = series.pct_change().dropna()
+        else:
+            transformed = series
+        self.last_price = float(series.iloc[-1])
+        self.last_date = series.index[-1]
+        return transformed
+
+    def inverse_transform(self, forecast_df: pd.DataFrame) -> pd.DataFrame:
+        if self.last_price is None:
+            return forecast_df
+        current = self.last_price
+        q10, q50, q90 = [], [], []
+        for r10, r50, r90 in zip(forecast_df["q10"].values, forecast_df["q50"].values, forecast_df["q90"].values):
+            if self.method == "log_return":
+                p10 = current * np.exp(r10)
+                p50 = current * np.exp(r50)
+                p90 = current * np.exp(r90)
+            elif self.method == "pct_change":
+                p10 = current * (1 + r10)
+                p50 = current * (1 + r50)
+                p90 = current * (1 + r90)
+            else:
+                p10, p50, p90 = r10, r50, r90
+            q10.append(p10)
+            q50.append(p50)
+            q90.append(p90)
+            current = p50
+        return pd.DataFrame({"q10": q10, "q50": q50, "q90": q90})
+
+
+class HybridTimeSeriesEnsemble:
+    def __init__(self, chronos_weight: float = 0.6, arima_weight: float = 0.2, gbdt_weight: float = 0.2):
+        self.chronos_weight = chronos_weight
+        self.arima_weight = arima_weight
+        self.gbdt_weight = gbdt_weight
+        self.bias_correction = None
+        self.arima_model = None
+
+    def fit_arima(self, series: pd.Series, horizon: int = 5):
+        try:
+            model = sm.tsa.ARIMA(series.values, order=(1, 0, 1))
+            fitted = model.fit()
+            self.arima_model = fitted
+            arima_forecast = fitted.forecast(steps=horizon)
+            residuals = series.values[-horizon:] - arima_forecast[:len(series.values[-horizon:])]
+            self.bias_correction = np.mean(residuals) if len(residuals) > 0 else 0.0
+        except Exception as e:
+            logger.warning("ARIMA fit failed: %s", e)
+            self.bias_correction = 0.0
+
+    def blend(self, chronos_df: pd.DataFrame, arima_df: pd.DataFrame, gbdt_df: pd.DataFrame) -> pd.DataFrame:
+        chronos_q50 = chronos_df["q50"].values
+        arima_q50 = arima_df["q50"].values if arima_df is not None and not arima_df.isna().all().all() else chronos_q50
+        gbdt_q50 = gbdt_df["q50"].values if gbdt_df is not None and not gbdt_df.isna().all().all() else chronos_q50
+
+        blended_q50 = (
+            self.chronos_weight * chronos_q50 +
+            self.arima_weight * arima_q50 +
+            self.gbdt_weight * gbdt_q50
+        )
+        if self.bias_correction is not None:
+            blended_q50 = blended_q50 - self.bias_correction
+
+        q10 = (
+            self.chronos_weight * chronos_df["q10"].values +
+            self.arima_weight * arima_df.get("q10", chronos_df["q10"]).values +
+            self.gbdt_weight * gbdt_df.get("q10", chronos_df["q10"]).values
+        )
+        q90 = (
+            self.chronos_weight * chronos_df["q90"].values +
+            self.arima_weight * arima_df.get("q90", chronos_df["q90"]).values +
+            self.gbdt_weight * gbdt_df.get("q90", chronos_df["q90"]).values
+        )
+
+        return pd.DataFrame({"q10": q10, "q50": blended_q50, "q90": q90})
+
+
+class ARIMAForecaster:
+    def __init__(self, order: Tuple[int, int, int] = (1, 0, 1)):
+        self.order = order
+        self.model = None
+
+    def fit(self, series: pd.Series):
+        try:
+            self.model = sm.tsa.ARIMA(series.values, order=self.order)
+            self.model = self.model.fit()
+        except Exception as e:
+            logger.warning("ARIMA fit failed: %s", e)
+            self.model = None
+
+    def predict(self, horizon: int) -> pd.DataFrame:
+        if self.model is None:
+            return pd.DataFrame({"q10": [np.nan] * horizon, "q50": [np.nan] * horizon, "q90": [np.nan] * horizon})
+        try:
+            forecast = self.model.forecast(steps=horizon)
+            std = np.std(self.model.resid) if hasattr(self.model, "resid") else np.std(forecast) * 0.1
+            return pd.DataFrame({
+                "q10": forecast - 1.28 * std,
+                "q50": forecast,
+                "q90": forecast + 1.28 * std,
+            })
+        except Exception as e:
+            logger.warning("ARIMA predict failed: %s", e)
+            return pd.DataFrame({"q10": [np.nan] * horizon, "q50": [np.nan] * horizon, "q90": [np.nan] * horizon})
 
 
 def _load_credentials() -> Tuple[str, str, str]:
@@ -245,6 +362,31 @@ def calculate_indicators(series: pd.Series, interval: str = "1day") -> pd.DataFr
     return df[keep]
 
 
+def calculate_directional_accuracy(actual: np.ndarray, predicted: np.ndarray) -> float:
+    if len(actual) < 2 or len(predicted) < 2:
+        return 0.0
+    actual_dir = np.diff(actual)
+    pred_dir = np.diff(predicted)
+    if len(actual_dir) == 0:
+        return 0.0
+    correct = np.sum((actual_dir > 0) & (pred_dir > 0)) + np.sum((actual_dir < 0) & (pred_dir < 0))
+    return float(correct / len(actual_dir) * 100)
+
+
+def select_context_window(history: pd.Series, horizon: int, volatility_window: int = 20) -> int:
+    if len(history) < 30:
+        return len(history)
+    returns = history.pct_change().dropna()
+    vol = returns.rolling(volatility_window).std().iloc[-1] if len(returns) >= volatility_window else returns.std()
+    base = max(horizon + 25, 30)
+    if vol > 0.025:
+        return min(len(history), base + 40)
+    elif vol < 0.015:
+        return min(len(history), base)
+    else:
+        return min(len(history), base + 20)
+
+
 def run_chronos_forecast(train_series: pd.Series, horizon: int = FORECAST_HORIZON, model_name: str = "amazon/chronos-t5-small") -> pd.DataFrame:
     logger.info("Loading %s from Hugging Face Hub...", model_name)
     chronos = BaseChronosPipeline.from_pretrained(model_name, device_map="cpu")
@@ -267,11 +409,12 @@ def run_chronos_forecast(train_series: pd.Series, horizon: int = FORECAST_HORIZO
 
 
 def backtest_forecast(history: pd.Series, horizon: int = 5, model_name: str = "amazon/chronos-t5-small", max_windows: int = 20) -> dict:
-    min_train = max(horizon + 25, 30)
+    min_train = select_context_window(history, horizon)
     if len(history) < min_train + horizon:
         return {"mape": None, "directional_accuracy": None, "note": f"Insufficient history for {min_train + horizon}-point walk-forward backtest"}
 
     errors = []
+    directional_accuracy_scores = []
     direction_correct_count = 0
     direction_total = 0
     windows = 0
@@ -298,6 +441,10 @@ def backtest_forecast(history: pd.Series, horizon: int = 5, model_name: str = "a
                 mape = np.mean(np.abs((actuals[mask] - predicted[mask]) / actuals[mask])) * 100
                 errors.append(mape)
 
+            dir_acc = calculate_directional_accuracy(actuals, predicted)
+            if dir_acc > 0:
+                directional_accuracy_scores.append(dir_acc)
+
             actual_dir = np.diff(actuals)
             pred_dir = np.diff(predicted)
             direction_correct_count += np.sum((actual_dir > 0) & (pred_dir > 0)) + np.sum((actual_dir < 0) & (pred_dir < 0))
@@ -309,9 +456,11 @@ def backtest_forecast(history: pd.Series, horizon: int = 5, model_name: str = "a
     if not errors or direction_total == 0:
         return {"mape": None, "directional_accuracy": None, "note": "Walk-forward backtest produced no valid samples"}
 
+    directional_accuracy = float(np.mean(directional_accuracy_scores)) if directional_accuracy_scores else None
+
     return {
         "mape": float(np.mean(errors)),
-        "directional_accuracy": float(direction_correct_count / direction_total * 100),
+        "directional_accuracy": directional_accuracy,
         "windows": windows,
         "samples": len(errors),
         "note": f"Walk-forward out-of-sample over {windows} expanding windows (horizon={horizon})"
@@ -398,15 +547,19 @@ def forecast_gbdt(models_and_scaler, df: pd.DataFrame, horizon: int = 1) -> pd.D
     })
 
 
-def ensemble_forecast(chronos_df: pd.DataFrame, gbdt_df: pd.DataFrame, method: str = "blend") -> pd.DataFrame:
-    if gbdt_df.isna().all().all():
-        return chronos_df
-
+def ensemble_forecast(chronos_df: pd.DataFrame, gbdt_df: pd.DataFrame, method: str = "blend", arima_df: pd.DataFrame = None) -> pd.DataFrame:
     if method == "chronos_only":
         return chronos_df
     elif method == "gbdt_only":
-        return gbdt_df
+        return gbdt_df if gbdt_df is not None and not gbdt_df.isna().all().all() else chronos_df
+    elif method == "hybrid":
+        ensemble = HybridTimeSeriesEnsemble(chronos_weight=0.6, arima_weight=0.2, gbdt_weight=0.2)
+        if arima_df is None:
+            arima_df = pd.DataFrame({"q10": chronos_df["q10"].values, "q50": chronos_df["q50"].values, "q90": chronos_df["q90"].values})
+        return ensemble.blend(chronos_df, arima_df, gbdt_df)
     else:
+        if gbdt_df.isna().all().all():
+            return chronos_df
         blended = 0.6 * chronos_df["q50"].values + 0.4 * gbdt_df["q50"].values
         q10 = 0.6 * chronos_df["q10"].values + 0.4 * gbdt_df["q10"].values
         q90 = 0.6 * chronos_df["q90"].values + 0.4 * gbdt_df["q90"].values

@@ -21,6 +21,10 @@ from forecast_pipeline import (
     forecast_gbdt,
     ensemble_forecast,
     get_nse_trading_days,
+    StationaryTransformer,
+    HybridTimeSeriesEnsemble,
+    ARIMAForecaster,
+    calculate_directional_accuracy,
     TARGET_SYMBOL,
     FORECAST_HORIZON,
 )
@@ -50,6 +54,7 @@ ENSEMBLE_METHODS = {
     "Blend (Chronos + GBDT)": "blend",
     "Chronos Only": "chronos_only",
     "GBDT Only": "gbdt_only",
+    "Hybrid (Chronos + ARIMA + GBDT)": "hybrid",
 }
 
 
@@ -295,12 +300,24 @@ def main():
             gbdt_data = build_gbdt_features(history_cut, indicators)
             gbdt_models = train_gbdt_models(gbdt_data, horizon=int(horizon))
             gbdt_forecast = forecast_gbdt(gbdt_models, gbdt_data, horizon=int(horizon))
-            chronos_forecast = run_chronos_forecast(history_cut, horizon=int(horizon), model_name=CHRONOS_MODELS[model_name])
-            forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method=ENSEMBLE_METHODS[ensemble_method])
 
-            if gbdt_forecast.isna().all().all() and ENSEMBLE_METHODS[ensemble_method] != "chronos_only":
+            transformer = StationaryTransformer(method="log_return")
+            stationary_series = transformer.fit_transform(history_cut)
+            chronos_forecast = run_chronos_forecast(stationary_series, horizon=int(horizon), model_name=CHRONOS_MODELS[model_name])
+            chronos_forecast = transformer.inverse_transform(chronos_forecast)
+
+            arima_df = None
+            if ENSEMBLE_METHODS[ensemble_method] == "hybrid":
+                arima_model = ARIMAForecaster(order=(1, 0, 1))
+                arima_model.fit(stationary_series)
+                arima_stationary = arima_model.predict(int(horizon))
+                arima_df = transformer.inverse_transform(arima_stationary)
+
+            forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method=ENSEMBLE_METHODS[ensemble_method], arima_df=arima_df)
+
+            if gbdt_forecast.isna().all().all() and ENSEMBLE_METHODS[ensemble_method] not in ("chronos_only", "hybrid"):
                 st.warning("GBDT ensemble skipped due to insufficient data or features. Falling back to Chronos-only forecast.")
-                forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method="chronos_only")
+                forecast_df = ensemble_forecast(chronos_forecast, gbdt_forecast, method="chronos_only", arima_df=arima_df)
         except Exception as e:
             st.error(f"Verification failed: {e}")
             st.stop()
