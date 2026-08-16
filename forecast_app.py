@@ -127,8 +127,34 @@ def get_cached_data(symbol: str, days: int = 365, interval: str = "1day", exchan
     return df
 
 
+def check_password():
+    try:
+        expected_password = st.secrets["APP_PASSWORD"]
+    except Exception:
+        expected_password = os.getenv("APP_PASSWORD", "")
+
+    if not expected_password:
+        st.info("No password configured. Set APP_PASSWORD in Streamlit secrets.")
+        st.stop()
+
+    if "password_correct" not in st.session_state:
+        st.session_state.password_correct = False
+
+    if not st.session_state.password_correct:
+        st.title("🔒 Login")
+        password = st.text_input("Enter password", type="password")
+        if st.button("Submit"):
+            if password == expected_password:
+                st.session_state.password_correct = True
+                st.rerun()
+            else:
+                st.error("Incorrect password")
+        st.stop()
+
+
 def main():
     st.set_page_config(page_title="NSE Chronos Forecaster", layout="wide")
+    check_password()
     st.title("📈 NSE Stock Forecast — Chronos-T5")
 
     segment = st.selectbox("Segment", options=["Equity", "Futures", "Options"], index=0)
