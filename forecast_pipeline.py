@@ -17,6 +17,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import StandardScaler
 import lightgbm as lgb
 import xgboost as xgb
+import pandas_market_calendars as mcal
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -55,8 +56,19 @@ def _load_credentials() -> Tuple[str, str, str]:
     return api_key, api_secret, session_token
 
 
+def get_nse_trading_days(start_date: datetime, end_date: datetime) -> pd.DatetimeIndex:
+    nse = mcal.get_calendar("NSE")
+    schedule = nse.schedule(start_date=start_date, end_date=end_date)
+    if schedule.empty:
+        return pd.DatetimeIndex([])
+    trading_days = pd.DatetimeIndex(schedule.index)
+    if trading_days.tz is not None:
+        trading_days = trading_days.tz_localize(None)
+    return trading_days
+
+
 TARGET_SYMBOL = os.getenv("TARGET_SYMBOL", "RELIANCE")
-FORECAST_HORIZON = int(os.getenv("FORECAST_HORIZON", "30"))
+FORECAST_HORIZON = int(os.getenv("FORECAST_HORIZON", "5"))
 _ICICI_API_KEY, _ICICI_API_SECRET, _ICICI_SESSION_TOKEN = _load_credentials()
 
 
@@ -84,7 +96,11 @@ def generate_mock_data(symbol: str = TARGET_SYMBOL, days: int = 365, interval: s
         if len(date_range) > total_points:
             date_range = date_range[:total_points]
     else:
-        date_range = pd.bdate_range(start=start_date, end=end_date)
+        trading_days = get_nse_trading_days(start_date, end_date)
+        if len(trading_days) == 0:
+            date_range = pd.bdate_range(start=start_date, end=end_date)
+        else:
+            date_range = trading_days
 
     base_price = 2500.0
     returns = np.random.normal(loc=0.0002, scale=0.015, size=len(date_range))
@@ -183,11 +199,23 @@ def clean_time_series(df: pd.DataFrame, interval: str = "1day") -> pd.Series:
     elif interval == "15minute":
         freq = "15min"
     else:
-        freq = "B"
+        start_date = df.index.min()
+        end_date = df.index.max()
+        trading_days = get_nse_trading_days(start_date, end_date)
+        if len(trading_days) > 0:
+            df = df.reindex(trading_days)
+            df = df.dropna(subset=["close"])
+            freq = "C"
+        else:
+            freq = "B"
 
-    full_range = pd.date_range(start=df.index.min(), end=df.index.max(), freq=freq)
-    df = df.reindex(full_range)
-    df["close"] = df["close"].ffill().bfill()
+    if interval != "1day":
+        full_range = pd.date_range(start=df.index.min(), end=df.index.max(), freq=freq)
+        df = df.reindex(full_range)
+
+    if interval != "1day":
+        df["close"] = df["close"].ffill().bfill()
+
     df.index.name = "date"
     series = df["close"].astype(float)
     logger.info("Cleaned series: %d observations (%s) from %s to %s",
@@ -238,8 +266,8 @@ def run_chronos_forecast(train_series: pd.Series, horizon: int = FORECAST_HORIZO
     return pd.DataFrame({"q10": q10, "q50": q50, "q90": q90})
 
 
-def backtest_forecast(history: pd.Series, horizon: int = 30, model_name: str = "amazon/chronos-t5-small", max_windows: int = 20) -> dict:
-    min_train = max(horizon + 90, 180)
+def backtest_forecast(history: pd.Series, horizon: int = 5, model_name: str = "amazon/chronos-t5-small", max_windows: int = 20) -> dict:
+    min_train = max(horizon + 25, 30)
     if len(history) < min_train + horizon:
         return {"mape": None, "directional_accuracy": None, "note": f"Insufficient history for {min_train + horizon}-point walk-forward backtest"}
 
@@ -491,7 +519,8 @@ def plot_forecast(
     save_path: str = "forecast_plot.png",
 ):
     last_date = history.index[-1]
-    forecast_dates = pd.bdate_range(start=last_date + timedelta(days=1), periods=len(forecast_df))
+    trading_days = get_nse_trading_days(last_date, last_date + timedelta(days=365))
+    forecast_dates = trading_days[:len(forecast_df)]
 
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(history.index, history.values, label="Historical Close", color="#1f77b4", linewidth=1.5)
@@ -519,8 +548,12 @@ def main():
 
     forecast_df = run_chronos_forecast(series)
 
+    last_date = series.index[-1]
+    trading_days = get_nse_trading_days(last_date, last_date + timedelta(days=365))
+    forecast_dates = trading_days[:len(forecast_df)]
+
     result_df = pd.DataFrame({
-        "forecast_date": pd.bdate_range(start=series.index[-1] + timedelta(days=1), periods=FORECAST_HORIZON),
+        "forecast_date": forecast_dates,
         "q10": forecast_df["q10"].values,
         "q50": forecast_df["q50"].values,
         "q90": forecast_df["q90"].values,

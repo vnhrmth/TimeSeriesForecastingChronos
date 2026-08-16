@@ -20,6 +20,7 @@ from forecast_pipeline import (
     train_gbdt_models,
     forecast_gbdt,
     ensemble_forecast,
+    get_nse_trading_days,
     TARGET_SYMBOL,
     FORECAST_HORIZON,
 )
@@ -306,7 +307,8 @@ def main():
 
     last_history_date = history_cut.index[-1]
     if interval == "1day":
-        forecast_dates = pd.bdate_range(start=last_history_date + timedelta(days=1), periods=len(forecast_df))
+        trading_days = get_nse_trading_days(last_history_date, last_history_date + timedelta(days=365))
+        forecast_dates = trading_days[:len(forecast_df)]
     elif interval == "15minute":
         forecast_dates = pd.date_range(start=last_history_date + timedelta(minutes=15), periods=len(forecast_df), freq="15min", tz="Asia/Kolkata")
     else:

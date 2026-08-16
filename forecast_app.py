@@ -23,6 +23,7 @@ from forecast_pipeline import (
     train_gbdt_models,
     forecast_gbdt,
     ensemble_forecast,
+    get_nse_trading_days,
     TARGET_SYMBOL,
     FORECAST_HORIZON,
 )
@@ -363,7 +364,8 @@ def main():
         current_price = float(series.iloc[-1])
 
         if interval == "1day":
-            forecast_dates = pd.bdate_range(start=last_date + timedelta(days=1), periods=len(forecast_df))
+            trading_days = get_nse_trading_days(last_date, last_date + timedelta(days=365))
+            forecast_dates = trading_days[:len(forecast_df)]
         elif interval == "15minute":
             forecast_dates = pd.date_range(start=last_date + timedelta(minutes=15), periods=len(forecast_df), freq="15min", tz="Asia/Kolkata")
         else:
@@ -441,7 +443,8 @@ def main():
 
     with tab4:
         if interval == "1day":
-            forecast_dates = pd.bdate_range(start=series.index[-1] + timedelta(days=1), periods=len(forecast_df))
+            trading_days = get_nse_trading_days(series.index[-1], series.index[-1] + timedelta(days=365))
+            forecast_dates = trading_days[:len(forecast_df)]
         elif interval == "15minute":
             forecast_dates = pd.date_range(start=series.index[-1] + timedelta(minutes=15), periods=len(forecast_df), freq="15min", tz="Asia/Kolkata")
         else:
