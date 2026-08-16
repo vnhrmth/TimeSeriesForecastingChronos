@@ -170,12 +170,38 @@ def main():
 
     with st.sidebar:
         st.subheader("⚙️ Settings")
-        current_token = st.session_state.get("override_session_token", "")
-        new_token = st.text_input("ICICI Session Token", value=current_token, type="password")
-        if st.button("Update Token"):
-            st.session_state.override_session_token = new_token.strip()
-            st.success("Token updated")
-            st.rerun()
+
+        api_key, api_secret, session_token = _load_credentials()
+        current_override = st.session_state.get("override_session_token", "")
+        active_token = current_override or session_token
+        token_source = "Session State" if current_override else "Secrets / .env"
+
+        st.caption(f"**Active token source:** {token_source}")
+        st.caption(f"**Token preview:** {active_token[:8]}..." if active_token else "**No token set**")
+
+        new_token = st.text_input("ICICI Session Token", value=current_override, type="password")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Update Token"):
+                st.session_state.override_session_token = new_token.strip()
+                st.success("Token updated")
+                st.rerun()
+        with col2:
+            if st.button("Test Connection"):
+                test_token = new_token.strip() or current_override
+                if not test_token:
+                    st.warning("Enter a session token first")
+                else:
+                    with st.spinner("Testing ICICI connection..."):
+                        test_breeze = BreezeConnect(api_key=api_key)
+                        try:
+                            test_breeze.generate_session(api_secret=api_secret, session_token=test_token)
+                            st.success("✅ Session token is valid")
+                        except Exception as e:
+                            st.error(f"❌ Session token rejected: {e}")
+
+        st.divider()
+        st.caption("⚠️ On Streamlit Cloud, session state may reset after ~5 min of inactivity. If you see 'Session key expired', re-enter your token.")
 
     st.title("🔍 Chronos Forecast Verification")
 
