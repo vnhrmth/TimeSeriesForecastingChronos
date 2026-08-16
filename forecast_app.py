@@ -155,6 +155,16 @@ def check_password():
 def main():
     st.set_page_config(page_title="NSE Chronos Forecaster", layout="wide")
     check_password()
+
+    with st.sidebar:
+        st.subheader("⚙️ Settings")
+        current_token = st.session_state.get("override_session_token", "")
+        new_token = st.text_input("ICICI Session Token", value=current_token, type="password")
+        if st.button("Update Token"):
+            st.session_state.override_session_token = new_token.strip()
+            st.success("Token updated")
+            st.rerun()
+
     st.title("📈 NSE Stock Forecast — Chronos-T5")
 
     segment = st.selectbox("Segment", options=["Equity", "Futures", "Options"], index=0)

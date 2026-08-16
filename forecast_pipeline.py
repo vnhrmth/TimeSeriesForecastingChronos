@@ -44,6 +44,14 @@ def _load_credentials() -> Tuple[str, str, str]:
     api_secret = api_secret or os.getenv("ICICI_API_SECRET", "")
     session_token = session_token or os.getenv("ICICI_SESSION_TOKEN", "")
 
+    try:
+        import streamlit as st
+        override = st.session_state.get("override_session_token", "")
+        if override:
+            session_token = override
+    except Exception:
+        pass
+
     return api_key, api_secret, session_token
 
 

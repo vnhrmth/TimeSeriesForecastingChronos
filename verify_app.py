@@ -161,6 +161,16 @@ def check_password():
 def main():
     st.set_page_config(page_title="Chronos Verification", layout="wide")
     check_password()
+
+    with st.sidebar:
+        st.subheader("⚙️ Settings")
+        current_token = st.session_state.get("override_session_token", "")
+        new_token = st.text_input("ICICI Session Token", value=current_token, type="password")
+        if st.button("Update Token"):
+            st.session_state.override_session_token = new_token.strip()
+            st.success("Token updated")
+            st.rerun()
+
     st.title("🔍 Chronos Forecast Verification")
 
     segment = st.selectbox("Segment", options=["Equity", "Futures", "Options"], index=0)
