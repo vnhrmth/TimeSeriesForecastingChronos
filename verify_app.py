@@ -443,31 +443,38 @@ def main():
         if actuals.empty:
             st.warning("No actual data available for the forecast horizon. Accuracy metrics cannot be computed.")
         else:
-            predicted = forecast_df["q50"].values[:len(actuals)]
-            actual_values = actuals.values[:len(predicted)]
+            forecast_aligned = pd.DataFrame({"forecast": forecast_df["q50"].values}, index=forecast_dates)
+            comparison = forecast_aligned.join(actuals.rename("actual"), how="inner")
+            comparison = comparison.dropna(subset=["actual", "forecast"])
 
-            mape = np.mean(np.abs((actual_values - predicted) / actual_values)) * 100
-            rmse = np.sqrt(np.mean((actual_values - predicted) ** 2))
-            mae = np.mean(np.abs(actual_values - predicted))
+            if comparison.empty:
+                st.warning("No overlapping dates between forecast and actuals. Cannot compute accuracy.")
+            else:
+                predicted = comparison["forecast"].values
+                actual_values = comparison["actual"].values
 
-            actual_dir = np.diff(actual_values)
-            pred_dir = np.diff(predicted)
-            direction_correct = np.sum((actual_dir > 0) & (pred_dir > 0)) + np.sum((actual_dir < 0) & (pred_dir < 0))
-            total = len(actual_dir)
-            directional_accuracy = (direction_correct / total * 100) if total > 0 else 0
+                mape = np.mean(np.abs((actual_values - predicted) / actual_values)) * 100
+                rmse = np.sqrt(np.mean((actual_values - predicted) ** 2))
+                mae = np.mean(np.abs(actual_values - predicted))
 
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("MAPE", f"{mape:.2f}%")
-            col2.metric("RMSE", f"{rmse:.2f}")
-            col3.metric("MAE", f"{mae:.2f}")
-            col4.metric("Directional Accuracy", f"{directional_accuracy:.2f}%")
+                actual_dir = np.diff(actual_values)
+                pred_dir = np.diff(predicted)
+                direction_correct = np.sum((actual_dir > 0) & (pred_dir > 0)) + np.sum((actual_dir < 0) & (pred_dir < 0))
+                total = len(actual_dir)
+                directional_accuracy = (direction_correct / total * 100) if total > 0 else 0
 
-            comparison_df = pd.DataFrame({
-                "date": actuals.index[:len(predicted)],
-                "actual": actual_values,
-                "forecast": predicted,
-                "error_pct": ((actual_values - predicted) / actual_values * 100),
-            })
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric("MAPE", f"{mape:.2f}%")
+                col2.metric("RMSE", f"{rmse:.2f}")
+                col3.metric("MAE", f"{mae:.2f}")
+                col4.metric("Directional Accuracy", f"{directional_accuracy:.2f}%")
+
+                comparison_df = pd.DataFrame({
+                    "date": comparison.index,
+                    "actual": actual_values,
+                    "forecast": predicted,
+                    "error_pct": ((actual_values - predicted) / actual_values * 100),
+                })
             st.dataframe(comparison_df, use_container_width=True)
             st.download_button(
                 "Download CSV",
