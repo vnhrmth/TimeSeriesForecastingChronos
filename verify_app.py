@@ -110,7 +110,7 @@ def load_fo_master(path: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def get_data_up_to(symbol: str, as_of_date: datetime, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = ""):
+def get_data_up_to(symbol: str, as_of_date: datetime, days: int = 365, interval: str = "1day", exchange_code: str = "NSE", product_type: str = "cash", expiry_date: str = "", strike_price: str = "", right: str = "", debug_mock: bool = False):
     end_date = as_of_date
     start_date = end_date - timedelta(days=days)
     df = fetch_icici_data(symbol, days=days, interval=interval, exchange_code=exchange_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right)
