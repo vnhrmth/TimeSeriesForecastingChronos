@@ -1,0 +1,251 @@
+company_name,nifty_symbol,icici_shortname,match_type
+ACME Solar Holdings Ltd.,ACMESOLAR,ACMSOL,company_normalized
+Aadhar Housing Finance Ltd.,AADHARHFC,AADHOS,company_normalized
+Aarti Industries Ltd.,AARTIIND,AARIND,company_normalized
+Aavas Financiers Ltd.,AAVAS,AAVFIN,company_normalized
+Action Construction Equipment Ltd.,ACE,ACTCON,company_word_overlap
+Acutaas Chemicals Ltd.,ACUTAAS,AMIORG,company_normalized
+Aditya Birla Fashion and Retail Ltd.,ABFRL,ADIFAS,company_word_overlap
+Aditya Birla Lifestyle Brands Ltd.,ABLBL,ADILIF,company_word_overlap
+Aditya Birla Real Estate Ltd.,ABREL,CENTEX,company_normalized
+Aditya Birla Sun Life AMC Ltd.,ABSLAMC,ADIAMC,company_normalized
+Aditya Infotech Ltd.,CPPLUS,ADIINF,company_normalized
+Aegis Logistics Ltd.,AEGISLOG,AEGLOG,company_normalized
+Aegis Vopak Terminals Ltd.,AEGISVOPAK,AEGVOP,company_normalized
+Afcons Infrastructure Ltd.,AFCONS,AFCINF,company_normalized
+Affle 3i Ltd.,AFFLE,AFFIND,company_normalized
+Allied Blenders and Distillers Ltd.,ABDL,ALLBLE,company_word_overlap
+Amara Raja Energy & Mobility Ltd.,ARE&M,AMARAJ,company_word_overlap
+Amber Enterprises India Ltd.,AMBER,AMBEN,company_normalized
+Anand Rathi Wealth Ltd.,ANANDRATHI,ANARAT,company_normalized
+Anant Raj Ltd.,ANANTRAJ,ANARAJ,company_normalized
+Angel One Ltd.,ANGELONE,ANGBRO,company_normalized
+Anupam Rasayan India Ltd.,ANURAS,ANURAS,company_normalized
+Aptus Value Housing Finance India Ltd.,APTUS,GICHOU,company_word_overlap
+Asahi India Glass Ltd.,ASAHIINDIA,ASAIND,company_normalized
+Aster DM Quality Care Ltd.,ASTERDM,ASTDM,company_normalized
+Ather Energy Ltd.,ATHERENERG,ATHENE,company_normalized
+Atul Ltd.,ATUL,ATUL,company_normalized
+BEML Ltd.,BEML,BEML,company_normalized
+BLS International Services Ltd.,BLS,BLSINT,company_normalized
+Balrampur Chini Mills Ltd.,BALRAMCHIN,BALCHI,company_normalized
+Bandhan Bank Ltd.,BANDHANBNK,BANBAN,company_normalized
+Bata India Ltd.,BATAINDIA,BATIND,company_normalized
+Bayer Cropscience Ltd.,BAYERCROP,BAYIND,company_normalized
+Belrise Industries Ltd.,BELRISE,BELLIM,company_normalized
+Bikaji Foods International Ltd.,BIKAJI,BIKFOO,company_word_overlap
+Birlasoft Ltd.,BSOFT,KPITEC,company_normalized
+Blue Dart Express Ltd.,BLUEDART,BLUDAR,company_normalized
+Blue Jet Healthcare Ltd.,BLUEJET,BLUJET,company_normalized
+Bombay Burmah Trading Corporation Ltd.,BBTC,BOMBUR,company_word_overlap
+Brainbees Solutions Ltd.,FIRSTCRY,BRASOL,company_normalized
+Brigade Enterprises Ltd.,BRIGADE,BRIENT,company_normalized
+C.E. Info Systems Ltd.,MAPMYINDIA,PROINF,company_word_overlap
+CCL Products (I) Ltd.,CCL,CCLPRO,company_word_overlap
+CESC Ltd.,CESC,CESC,company_normalized
+CIE Automotive India Ltd.,CIEINDIA,MAHCIE,company_normalized
+Can Fin Homes Ltd.,CANFINHOME,CANHOM,company_normalized
+Canara HSBC Life Insurance Company Ltd.,CANHLIFE,SBILIF,company_word_overlap
+Caplin Point Laboratories Ltd.,CAPLIPOINT,CAPPOI,company_normalized
+Capri Global Capital Ltd.,CGCL,CAPGLO,company_normalized
+Carborundum Universal Ltd.,CARBORUNIV,CARUNI,company_normalized
+Cartrade Tech Ltd.,CARTRADE,CARTEC,company_normalized
+Castrol India Ltd.,CASTROLIND,CASIND,company_normalized
+Ceat Ltd.,CEATLTD,CEAT,company_normalized
+Cemindia Projects Ltd.,CEMPRO,ITDCEM,company_normalized
+Central Bank of India,CENTRALBK,CENBAN,company_normalized
+Central Depository Services (India) Ltd.,CDSL,CDSL,symbol_exact
+Chalet Hotels Ltd.,CHALET,CHAHOT,company_normalized
+Chambal Fertilizers & Chemicals Ltd.,CHAMBLFERT,SUKSTA,company_word_overlap
+Chennai Petroleum Corporation Ltd.,CHENNPETRO,CHEPET,company_word_overlap
+Choice International Ltd.,CHOICEIN,CHOINT,company_normalized
+Cholamandalam Financial Holdings Ltd.,CHOLAHLDNG,TUBINV,company_word_overlap
+City Union Bank Ltd.,CUB,CITUNI,company_normalized
+Clean Science and Technology Ltd.,CLEAN,CLESCI,company_word_overlap
+Cohance Lifesciences Ltd.,COHANCE,SUVPH,company_normalized
+Computer Age Management Services Ltd.,CAMS,SATCOM,company_word_overlap
+Concord Biotech Ltd.,CONCORDBIO,CONBIO,company_normalized
+Craftsman Automation Ltd.,CRAFTSMAN,CRAAUT,company_normalized
+CreditAccess Grameen Ltd.,CREDITACC,CREGRA,company_normalized
+Crompton Greaves Consumer Electricals Ltd.,CROMPTON,CROGR,company_word_overlap
+Cyient Ltd.,CYIENT,CYILIM,company_normalized
+DCM Shriram Ltd.,DCMSHRIRAM,DCMSHR,company_normalized
+DOMS Industries Ltd.,DOMS,DOMIND,company_normalized
+Data Patterns (India) Ltd.,DATAPATTNS,DATPAT,company_word_overlap
+Deepak Fertilisers & Petrochemicals Corp. Ltd.,DEEPAKFERT,FORCOM,company_word_overlap
+Deepak Nitrite Ltd.,DEEPAKNTR,DEENIT,company_normalized
+Delhivery Ltd.,DELHIVERY,DELLIM,company_normalized
+Devyani International Ltd.,DEVYANI,DEVIN,company_normalized
+Dr. Lal Path Labs Ltd.,LALPATHLAB,DATLAB,company_word_overlap
+E.I.D. Parry (India) Ltd.,EIDPARRY,EIDPAR,company_normalized
+EIH Ltd.,EIHOTEL,EIHLIM,company_normalized
+Elecon Engineering Co. Ltd.,ELECON,FLEENG,company_word_overlap
+Elgi Equipments Ltd.,ELGIEQUIP,ELGEQU,company_normalized
+Emami Ltd.,EMAMILTD,EMALIM,company_normalized
+Emcure Pharmaceuticals Ltd.,EMCURE,EMCPHA,company_normalized
+Emmvee Photovoltaic Power Ltd.,EMMVEE,EMMPHO,company_word_overlap
+Engineers India Ltd.,ENGINERSIN,ENGIND,company_normalized
+Eris Lifesciences Ltd.,ERIS,ERILIF,company_normalized
+Fertilisers and Chemicals Travancore Ltd.,FACT,FACT,symbol_exact
+Finolex Cables Ltd.,FINCABLES,FINCAB,company_normalized
+Firstsource Solutions Ltd.,FSL,FIRSOU,company_normalized
+Five-Star Business Finance Ltd.,FIVESTAR,FIVSTA,company_word_overlap
+Force Motors Ltd.,FORCEMOT,FORMOT,company_normalized
+Gabriel India Ltd.,GABRIEL,GABIND,company_normalized
+Gallantt Ispat Ltd.,GALLANTT,GALMET,company_normalized
+Garden Reach Shipbuilders & Engineers Ltd.,GRSE,GARREA,company_word_overlap
+Gillette India Ltd.,GILLETTE,GILIND,company_normalized
+Gland Pharma Ltd.,GLAND,GLAPH,company_normalized
+Go Digit General Insurance Ltd.,GODIGIT,GODIGI,company_normalized
+Godawari Power & Ispat Ltd.,GPIL,GODPOW,company_word_overlap
+Granules India Ltd.,GRANULES,GRANUL,company_normalized
+Graphite India Ltd.,GRAPHITE,CAREVE,company_normalized
+Gravita India Ltd.,GRAVITA,GRAVIN,company_normalized
+Great Eastern Shipping Co. Ltd.,GESHIP,GESHIP,company_normalized
+Gujarat Mineral Development Corporation Ltd.,GMDCLTD,GUJMI,company_word_overlap
+H.E.G. Ltd.,HEG,HEG,company_normalized
+HBL Engineering Ltd.,HBLENGINE,HBLPOW,company_normalized
+HFCL Ltd.,HFCL,HIMFUT,company_normalized
+Himadri Speciality Chemical Ltd.,HSCL,HIMCHE,company_word_overlap
+Hindustan Copper Ltd.,HINDCOPPER,HINCOP,company_normalized
+Home First Finance Company India Ltd.,HOMEFIRST,HOMFIR,company_word_overlap
+Honasa Consumer Ltd.,HONASA,HONCON,company_normalized
+IDBI Bank Ltd.,IDBI,IDBI,company_normalized
+IFCI Ltd.,IFCI,IFCI,company_normalized
+IIFL Finance Ltd.,IIFL,IIFHOL,company_normalized
+IRB Infrastructure Developers Ltd.,IRB,IRBINF,company_word_overlap
+IRCON International Ltd.,IRCON,IRCINT,company_normalized
+ITI Ltd.,ITI,ITI,symbol_exact
+Indegene Ltd.,INDGN,INDLTD,company_normalized
+India Cements Ltd.,INDIACEM,INDCEM,company_normalized
+Indiamart Intermesh Ltd.,INDIAMART,INDMAR,company_normalized
+Indian Energy Exchange Ltd.,IEX,INDEN,company_normalized
+Indian Overseas Bank,IOB,INDOVE,company_normalized
+Indraprastha Gas Ltd.,IGL,INDGAS,company_word_overlap
+Inox Wind Ltd.,INOXWIND,INOWIN,company_normalized
+Intellect Design Arena Ltd.,INTELLECT,INTDES,company_normalized
+International Gemological Institute Ltd.,IGIL,INTGEM,company_word_overlap
+Inventurus Knowledge Solutions Ltd.,IKS,INVKNO,company_word_overlap
+JBM Auto Ltd.,JBMA,JBMAUT,company_normalized
+JK Tyre & Industries Ltd.,JKTYRE,JKTYRE,symbol_exact
+JM Financial Ltd.,JMFINANCIL,JMFINA,company_normalized
+JSW Cement Ltd.,JSWCEMENT,JSWCEM,company_normalized
+JSW Dulux Ltd.,JSWDULUX,AKZNOB,company_normalized
+Jain Resource Recycling Ltd.,JAINREC,JAIRES,company_normalized
+Jaiprakash Power Ventures Ltd.,JPPOWER,JAIPOW,company_word_overlap
+Jammu & Kashmir Bank Ltd.,J&KBANK,JAMKAS,company_word_overlap
+Jindal Saw Ltd.,JINDALSAW,JINSAW,company_normalized
+Jubilant Ingrevia Ltd.,JUBLINGREA,JUBING,company_normalized
+Jubilant Pharmova Ltd.,JUBLPHARMA,JUBLIF,company_normalized
+Jupiter Wagons Ltd.,JWL,COMENG,company_normalized
+Jyoti CNC Automation Ltd.,JYOTICNC,JYOCNC,company_normalized
+Kajaria Ceramics Ltd.,KAJARIACER,KAJCER,company_normalized
+Kalpataru Projects International Ltd.,KPIL,KALPOW,company_word_overlap
+Karur Vysya Bank Ltd.,KARURVYSYA,KARVYS,company_normalized
+Kaynes Technology India Ltd.,KAYNES,KAYTEC,company_word_overlap
+Kec International Ltd.,KEC,KECIN,company_word_overlap
+Kfin Technologies Ltd.,KFINTECH,KFITEC,company_normalized
+Kirloskar Oil Eng Ltd.,KIRLOSENG,KIRENG,company_word_overlap
+Krishna Institute of Medical Sciences Ltd.,KIMS,KRIINS,company_word_overlap
+LT Foods Ltd.,LTFOODS,LTOVER,company_normalized
+Latent View Analytics Ltd.,LATENTVIEW,LATVIE,company_normalized
+Leela Palaces Hotels & Resorts Ltd.,THELEELA,SCHBAN,company_word_overlap
+Lemon Tree Hotels Ltd.,LEMONTREE,LEMTRE,company_normalized
+MMTC Ltd.,MMTC,MINERA,company_normalized
+Mahanagar Gas Ltd.,MGL,MAHGAS,company_normalized
+Manappuram Finance Ltd.,MANAPPURAM,MANAFI,company_normalized
+Mangalore Refinery & Petrochemicals Ltd.,MRPL,MRPL,symbol_exact
+Meesho Ltd.,MEESHO,MEESHO,company_normalized
+Minda Corporation Ltd.,MINDACORP,MINCOR,company_normalized
+Motherson Sumi Wiring India Ltd.,MSUMI,MOTSU,company_word_overlap
+NATCO Pharma Ltd.,NATCOPHARM,NATPHA,company_normalized
+NBCC (India) Ltd.,NBCC,NBCC,company_normalized
+NCC Ltd.,NCC,NAGCON,company_normalized
+NMDC Steel Ltd.,NSLNISP,NMDSTE,company_normalized
+Narayana Hrudayalaya Ltd.,NH,NARHRU,company_normalized
+Nava Ltd.,NAVA,NAVBHA,company_normalized
+Navin Fluorine International Ltd.,NAVINFLUOR,NAVFLU,company_word_overlap
+Netweb Technologies India Ltd.,NETWEB,NETTEC,company_normalized
+Neuland Laboratories Ltd.,NEULANDLAB,NEULAB,company_normalized
+Newgen Software Technologies Ltd.,NEWGEN,NEWSOF,company_word_overlap
+Niva Bupa Health Insurance Company Ltd.,NIVABUPA,NIVBUP,company_word_overlap
+Nuvama Wealth Management Ltd.,NUVAMA,NUVWEA,company_word_overlap
+Nuvoco Vistas Corporation Ltd.,NUVOCO,NUVVIS,company_normalized
+Ola Electric Mobility Ltd.,OLAELEC,OLAELE,company_normalized
+Olectra Greentech Ltd.,OLECTRA,GOLTEL,company_normalized
+Onesource Specialty Pharma Ltd.,ONESOURCE,ONESPE,company_normalized
+PCBL Chemical Ltd.,PCBL,PHICAR,company_normalized
+PG Electroplast Ltd.,PGEL,PGELEC,company_normalized
+PNB Housing Finance Ltd.,PNBHOUSING,PNBHOU,company_normalized
+PTC Industries Ltd.,PTCIL,PTCIN,company_normalized
+PVR INOX Ltd.,PVRINOX,PVRLIM,company_normalized
+Paradeep Phosphates Ltd.,PARADEEP,PARPHO,company_normalized
+Pfizer Ltd.,PFIZER,PFIZER,company_normalized
+Physicswallah Ltd.,PWL,PHYLIM,company_normalized
+Pine Labs Ltd.,PINELABS,PINLAB,company_normalized
+Piramal Finance Ltd.,PIRAMALFIN,PIRFIN,company_normalized
+Piramal Pharma Ltd.,PPLPHARMA,PIRPHA,company_normalized
+Poly Medicure Ltd.,POLYMED,POLMED,company_normalized
+Poonawalla Fincorp Ltd.,POONAWALLA,MAGFI,company_normalized
+Prime Focus Ltd.,PFOCUS,PRIFOC,company_normalized
+R R Kabel Ltd.,RRKABEL,RRKAB,company_normalized
+RBL Bank Ltd.,RBLBANK,RBLBAN,company_normalized
+RHI MAGNESITA INDIA LTD.,RHIM,ORIREF,company_normalized
+RITES Ltd.,RITES,RITLIM,company_normalized
+Railtel Corporation Of India Ltd.,RAILTEL,RAICOR,company_word_overlap
+Rainbow Childrens Medicare Ltd.,RAINBOW,RAICHI,company_normalized
+Ramkrishna Forgings Ltd.,RKFORGE,RAMFOR,company_normalized
+Redington Ltd.,REDINGTON,REDIND,company_normalized
+Reliance Power Ltd.,RPOWER,RELPOW,company_normalized
+SBFC Finance Ltd.,SBFC,SBFFIN,company_normalized
+Sagility Ltd.,SAGILITY,SAGINI,company_normalized
+Sai Life Sciences Ltd.,SAILIFE,SAILIF,company_normalized
+Sammaan Capital Ltd.,SAMMAANCAP,INDHO,company_normalized
+Sapphire Foods India Ltd.,SAPPHIRE,SAPFOO,company_normalized
+Sarda Energy and Minerals Ltd.,SARDAEN,SARENE,company_word_overlap
+Saregama India Ltd,SAREGAMA,SAREIN,company_normalized
+Schneider Electric Infrastructure Ltd.,SCHNEIDER,SCHELE,company_word_overlap
+Shipping Corporation of India Ltd.,SCI,SCI,symbol_exact
+Shyam Metalics and Energy Ltd.,SHYAMMETL,SHYMET,company_normalized
+Signatureglobal (India) Ltd.,SIGNATURE,ALFLAV,company_word_overlap
+Sobha Ltd.,SOBHA,SOBDEV,company_normalized
+Sona BLW Precision Forgings Ltd.,SONACOMS,SONBLW,company_word_overlap
+Sonata Software Ltd.,SONATSOFTW,SONSOF,company_normalized
+Star Health and Allied Insurance Company Ltd.,STARHEALTH,STAHEA,company_word_overlap
+Sumitomo Chemical India Ltd.,SUMICHEM,SUMCH,company_normalized
+Sun TV Network Ltd.,SUNTV,SUNTV,company_normalized
+Supreme Petrochem Ltd.,SPLPETRO,SUPPET,company_normalized
+Swan Corp Ltd.,SWANCORP,SWAENE,company_normalized
+Syngene International Ltd.,SYNGENE,SYNINT,company_normalized
+Syrma SGS Technology Ltd.,SYRMA,SYRTEC,company_word_overlap
+TBO Tek Ltd.,TBOTEK,TBOTEK,company_normalized
+Tata Chemicals Ltd.,TATACHEM,TATCHE,company_normalized
+Tata Technologies Ltd.,TATATECH,TATTEC,company_normalized
+Tata Teleservices (Maharashtra) Ltd.,TTML,TATINF,company_word_overlap
+Techno Electric & Engineering Company Ltd.,TECHNOE,FORCOM,company_word_overlap
+Tega Industries Ltd.,TEGA,TEGIND,company_normalized
+Tejas Networks Ltd.,TEJASNET,TEJNET,company_normalized
+Tenneco Clean Air India Ltd.,TENNIND,TENCLE,company_word_overlap
+The Ramco Cements Ltd.,RAMCOCEM,RAMCEM,company_normalized
+Timken India Ltd.,TIMKEN,TIMIND,company_normalized
+Titagarh Rail Systems Ltd.,TITAGARH,TITWAG,company_normalized
+Transformers And Rectifiers (India) Ltd.,TARIL,TRAREC,company_word_overlap
+Travel Food Services Ltd.,TRAVELFOOD,TRVFOO,company_normalized
+Trident Ltd.,TRIDENT,TRILTD,company_normalized
+Triveni Turbine Ltd.,TRITURBINE,TRITUR,company_normalized
+UCO Bank,UCOBANK,UCOBAN,company_normalized
+UTI Asset Management Company Ltd.,UTIAMC,UTIAMC,symbol_exact
+Urban Company Ltd.,URBANCO,URBCOM,company_normalized
+Usha Martin Ltd.,USHAMART,USHMA,company_normalized
+Vardhman Textiles Ltd.,VTL,NEPTEX,company_word_overlap
+Vijaya Diagnostic Centre Ltd.,VIJAYA,VIJDIA,company_normalized
+Welspun Corp Ltd.,WELCORP,WELCOR,company_normalized
+Welspun Living Ltd.,WELSPUNLIV,WELIND,company_normalized
+Whirlpool of India Ltd.,WHIRLPOOL,WHIIND,company_normalized
+Wockhardt Ltd.,WOCKPHARMA,WOCKHA,company_normalized
+ZF Commercial Vehicle Control Systems India Ltd.,ZFCVINDIA,WABIND,company_word_overlap
+Zee Entertainment Enterprises Ltd.,ZEEL,ZEEENT,company_word_overlap
+Zen Technologies Ltd.,ZENTEC,ZENTEC,company_normalized
+Zensar Technolgies Ltd.,ZENSARTECH,ZENTE,company_word_overlap
+Zydus Wellness Ltd.,ZYDUSWELL,ZYDWEL,company_normalized
+eClerx Services Ltd.,ECLERX,ECLSER,company_normalized
