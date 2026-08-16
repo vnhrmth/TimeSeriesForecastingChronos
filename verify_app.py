@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import torch
+from breeze_connect import BreezeConnect
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from forecast_pipeline import (
@@ -24,6 +25,7 @@ from forecast_pipeline import (
     StationaryTransformer,
     HybridTimeSeriesEnsemble,
     ARIMAForecaster,
+    _load_credentials,
     calculate_directional_accuracy,
     TARGET_SYMBOL,
     FORECAST_HORIZON,
