@@ -373,6 +373,22 @@ def calculate_directional_accuracy(actual: np.ndarray, predicted: np.ndarray) ->
     return float(correct / len(actual_dir) * 100)
 
 
+def adjust_forecast_to_actual_base(forecast_df: pd.DataFrame, actual_base_price: float) -> pd.DataFrame:
+    if forecast_df.empty or len(forecast_df) < 1:
+        return forecast_df
+    model_base = float(forecast_df["q50"].iloc[0])
+    if model_base == 0:
+        return forecast_df
+    pct_change_q10 = (forecast_df["q10"].values - model_base) / model_base
+    pct_change_q50 = (forecast_df["q50"].values - model_base) / model_base
+    pct_change_q90 = (forecast_df["q90"].values - model_base) / model_base
+    return pd.DataFrame({
+        "q10": actual_base_price * (1 + pct_change_q10),
+        "q50": actual_base_price * (1 + pct_change_q50),
+        "q90": actual_base_price * (1 + pct_change_q90),
+    })
+
+
 def select_context_window(history: pd.Series, horizon: int, volatility_window: int = 20) -> int:
     if len(history) < 30:
         return len(history)

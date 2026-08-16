@@ -27,6 +27,7 @@ from forecast_pipeline import (
     ARIMAForecaster,
     _load_credentials,
     calculate_directional_accuracy,
+    adjust_forecast_to_actual_base,
     TARGET_SYMBOL,
     FORECAST_HORIZON,
 )
@@ -373,6 +374,9 @@ def main():
     actuals = actuals[actuals.index > pd.Timestamp(last_history_date)]
     actuals = actuals.iloc[:int(horizon)]
 
+    actual_base_price = float(history_cut.iloc[-1])
+    forecast_adjusted = adjust_forecast_to_actual_base(forecast_df, actual_base_price)
+
     tab1, tab2, tab3 = st.tabs(["Chart", "Accuracy", "Data"])
 
     with tab1:
@@ -392,15 +396,23 @@ def main():
             x=forecast_dates,
             y=forecast_df["q50"].values,
             mode="lines",
-            name="Median Forecast",
+            name="Median Forecast (Raw)",
             line=dict(color="#ff7f0e", width=2),
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=forecast_dates,
+            y=forecast_adjusted["q50"].values,
+            mode="lines",
+            name="Median Forecast (Adjusted to P0)",
+            line=dict(color="#ff7f0e", width=2, dash="dot"),
         ))
 
         fig.add_trace(go.Scatter(
             x=forecast_dates,
             y=forecast_df["q90"].values,
             mode="lines",
-            name="90th Percentile",
+            name="90th Percentile (Raw)",
             line=dict(color="#ff7f0e", width=1, dash="dot"),
         ))
 
@@ -408,10 +420,28 @@ def main():
             x=forecast_dates,
             y=forecast_df["q10"].values,
             mode="lines",
-            name="10th Percentile",
+            name="10th Percentile (Raw)",
             line=dict(color="#ff7f0e", width=1, dash="dot"),
             fill="tonexty",
             fillcolor="rgba(255,127,14,0.2)",
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=forecast_dates,
+            y=forecast_adjusted["q90"].values,
+            mode="lines",
+            name="90th Percentile (Adjusted)",
+            line=dict(color="#d62728", width=1, dash="dot"),
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=forecast_dates,
+            y=forecast_adjusted["q10"].values,
+            mode="lines",
+            name="10th Percentile (Adjusted)",
+            line=dict(color="#d62728", width=1, dash="dot"),
+            fill="tonexty",
+            fillcolor="rgba(214,39,40,0.15)",
         ))
 
         if not actuals.empty:
@@ -443,37 +473,57 @@ def main():
         if actuals.empty:
             st.warning("No actual data available for the forecast horizon. Accuracy metrics cannot be computed.")
         else:
-            forecast_aligned = pd.DataFrame({"forecast": forecast_df["q50"].values}, index=forecast_dates)
+            forecast_aligned = pd.DataFrame({"forecast_raw": forecast_df["q50"].values, "forecast_adj": forecast_adjusted["q50"].values}, index=forecast_dates)
             comparison = forecast_aligned.join(actuals.rename("actual"), how="inner")
-            comparison = comparison.dropna(subset=["actual", "forecast"])
+            comparison = comparison.dropna(subset=["actual", "forecast_adj"])
 
             if comparison.empty:
                 st.warning("No overlapping dates between forecast and actuals. Cannot compute accuracy.")
             else:
-                predicted = comparison["forecast"].values
+                predicted_raw = comparison["forecast_raw"].values
+                predicted_adj = comparison["forecast_adj"].values
                 actual_values = comparison["actual"].values
 
-                mape = np.mean(np.abs((actual_values - predicted) / actual_values)) * 100
-                rmse = np.sqrt(np.mean((actual_values - predicted) ** 2))
-                mae = np.mean(np.abs(actual_values - predicted))
+                mape_raw = np.mean(np.abs((actual_values - predicted_raw) / actual_values)) * 100
+                rmse_raw = np.sqrt(np.mean((actual_values - predicted_raw) ** 2))
+                mae_raw = np.mean(np.abs(actual_values - predicted_raw))
+
+                mape_adj = np.mean(np.abs((actual_values - predicted_adj) / actual_values)) * 100
+                rmse_adj = np.sqrt(np.mean((actual_values - predicted_adj) ** 2))
+                mae_adj = np.mean(np.abs(actual_values - predicted_adj))
 
                 actual_dir = np.diff(actual_values)
-                pred_dir = np.diff(predicted)
-                direction_correct = np.sum((actual_dir > 0) & (pred_dir > 0)) + np.sum((actual_dir < 0) & (pred_dir < 0))
+                pred_dir_raw = np.diff(predicted_raw)
+                pred_dir_adj = np.diff(predicted_adj)
+                direction_correct_raw = np.sum((actual_dir > 0) & (pred_dir_raw > 0)) + np.sum((actual_dir < 0) & (pred_dir_raw < 0))
+                direction_correct_adj = np.sum((actual_dir > 0) & (pred_dir_adj > 0)) + np.sum((actual_dir < 0) & (pred_dir_adj < 0))
                 total = len(actual_dir)
-                directional_accuracy = (direction_correct / total * 100) if total > 0 else 0
+                directional_accuracy_raw = (direction_correct_raw / total * 100) if total > 0 else 0
+                directional_accuracy_adj = (direction_correct_adj / total * 100) if total > 0 else 0
 
-                col1, col2, col3, col4 = st.columns(4)
-                col1.metric("MAPE", f"{mape:.2f}%")
-                col2.metric("RMSE", f"{rmse:.2f}")
-                col3.metric("MAE", f"{mae:.2f}")
-                col4.metric("Directional Accuracy", f"{directional_accuracy:.2f}%")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.caption("Raw Model Output")
+                    c1, c2, c3, c4 = st.columns(4)
+                    c1.metric("MAPE", f"{mape_raw:.2f}%")
+                    c2.metric("RMSE", f"{rmse_raw:.2f}")
+                    c3.metric("MAE", f"{mae_raw:.2f}")
+                    c4.metric("Directional Accuracy", f"{directional_accuracy_raw:.2f}%")
+                with col2:
+                    st.caption("Adjusted to Actual P0")
+                    c5, c6, c7, c8 = st.columns(4)
+                    c5.metric("MAPE", f"{mape_adj:.2f}%")
+                    c6.metric("RMSE", f"{rmse_adj:.2f}")
+                    c7.metric("MAE", f"{mae_adj:.2f}")
+                    c8.metric("Directional Accuracy", f"{directional_accuracy_adj:.2f}%")
 
                 comparison_df = pd.DataFrame({
                     "date": comparison.index,
                     "actual": actual_values,
-                    "forecast": predicted,
-                    "error_pct": ((actual_values - predicted) / actual_values * 100),
+                    "forecast_raw": predicted_raw,
+                    "forecast_adjusted": predicted_adj,
+                    "error_raw_pct": ((actual_values - predicted_raw) / actual_values * 100),
+                    "error_adj_pct": ((actual_values - predicted_adj) / actual_values * 100),
                 })
             st.dataframe(comparison_df, use_container_width=True)
             st.download_button(
@@ -487,9 +537,12 @@ def main():
         st.subheader("Forecast Data")
         forecast_out = pd.DataFrame({
             "forecast_date": forecast_dates,
-            "q10": forecast_df["q10"].values,
-            "q50": forecast_df["q50"].values,
-            "q90": forecast_df["q90"].values,
+            "q10_raw": forecast_df["q10"].values,
+            "q50_raw": forecast_df["q50"].values,
+            "q90_raw": forecast_df["q90"].values,
+            "q10_adj": forecast_adjusted["q10"].values,
+            "q50_adj": forecast_adjusted["q50"].values,
+            "q90_adj": forecast_adjusted["q90"].values,
         })
         st.dataframe(forecast_out, use_container_width=True)
 
